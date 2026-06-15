@@ -1,0 +1,92 @@
+version: "3.9"
+
+# ─── Shared network ──────────────────────────────────────────────────────────
+networks:
+  rag_net:
+    driver: bridge
+
+# ─── Named volumes ───────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  chroma_data:
+  upload_data:
+
+services:
+
+  # ── 1. PostgreSQL ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: rag_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-enterprise_rag}
+      POSTGRES_USER: ${POSTGRES_USER:-raguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ragpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-raguser} -d ${POSTGRES_DB:-enterprise_rag}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── 2. ChromaDB ──────────────────────────────────────────────────────────
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: rag_chromadb
+    restart: unless-stopped
+    environment:
+      CHROMA_SERVER_HTTP_PORT: "8000"
+      ANONYMIZED_TELEMETRY: "false"
+      ALLOW_RESET: "true"
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8000:8000"
+    networks:
+      - rag_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── 3. FastAPI application ───────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: rag_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override host/port values to use Docker service names
+      POSTGRES_HOST: postgres
+      CHROMA_HOST: chromadb
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-raguser}:${POSTGRES_PASSWORD:-ragpassword}@postgres:5432/${POSTGRES_DB:-enterprise_rag}"
+    volumes:
+      - upload_data:/app/uploads
+      - chroma_data:/app/chroma_db
+    ports:
+      - "8080:8080"
+    networks:
+      - rag_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

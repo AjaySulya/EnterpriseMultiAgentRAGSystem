@@ -1,0 +1,48 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Settings & Validation
+pydantic
+pydantic-settings
+
+# Database
+sqlalchemy
+asyncpg
+alembic
+psycopg[binary]
+
+# AI Stack
+langchain
+langchain-community
+langchain-core
+langgraph
+
+# Embeddings
+sentence-transformers
+huggingface-hub
+transformers
+
+# Vector Store
+chromadb
+
+# Document Processing
+pymupdf
+
+# Web Processing
+httpx
+beautifulsoup4
+lxml
+
+# Utilities
+python-dotenv
+tenacity
+structlog
+aiofiles
+
+
+pytest
+pytest-asyncio
+
+pydantic[email]

@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enterprise RAG System — Project Structure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0e14;
+  --bg2: #111520;
+  --bg3: #181d2a;
+  --bg4: #1e2435;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e2e6f0;
+  --muted: #6b7491;
+  --dim: #3d4460;
+
+  --api:    #3b82f6;
+  --ai:     #a78bfa;
+  --db:     #34d399;
+  --svc:    #fb923c;
+  --infra:  #f59e0b;
+  --util:   #94a3b8;
+
+  --api-bg:   rgba(59,130,246,0.1);
+  --ai-bg:    rgba(167,139,250,0.1);
+  --db-bg:    rgba(52,211,153,0.1);
+  --svc-bg:   rgba(251,146,60,0.1);
+  --infra-bg: rgba(245,158,11,0.1);
+  --util-bg:  rgba(148,163,184,0.08);
+
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 32px 40px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+.header-left { display: flex; flex-direction: column; gap: 4px; }
+.header-title {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+.header-title span { color: var(--ai); }
+.header-sub { color: var(--muted); font-size: 13px; }
+.legend {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+}
+.leg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── LAYOUT ── */
+.page { display: grid; grid-template-columns: 380px 1fr; min-height: calc(100vh - 89px); }
+
+/* ── TREE PANEL ── */
+.tree-panel {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 20px 0 40px;
+}
+.tree-section { margin-bottom: 4px; }
+.tree-group-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 14px 24px 6px;
+}
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.tree-item:hover { background: var(--bg3); }
+.tree-item.active { background: var(--bg4); }
+.tree-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+}
+.tree-item.active.c-api::before   { background: var(--api); }
+.tree-item.active.c-ai::before    { background: var(--ai); }
+.tree-item.active.c-db::before    { background: var(--db); }
+.tree-item.active.c-svc::before   { background: var(--svc); }
+.tree-item.active.c-infra::before { background: var(--infra); }
+.tree-item.active.c-util::before  { background: var(--util); }
+
+.tree-indent {
+  display: flex;
+  align-items: center;
+  padding: 7px 0;
+  width: 100%;
+  gap: 8px;
+}
+.tree-lines {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-width: 32px;
+  flex-shrink: 0;
+}
+.vline {
+  width: 1px;
+  background: var(--border);
+  margin: 0 11px;
+  align-self: stretch;
+}
+.branch {
+  width: 20px;
+  height: 20px;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 0 0 0 3px;
+  margin-left: 0;
+  flex-shrink: 0;
+  position: relative;
+  top: -6px;
+}
+.tree-icon {
+  width: 20px; height: 20px;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-weight: 700;
+}
+.tree-name {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tree-name .dir-name { color: var(--muted); font-weight: 400; }
+.tree-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+.tree-badge.api   { background: var(--api-bg);  color: var(--api); }
+.tree-badge.ai    { background: var(--ai-bg);   color: var(--ai); }
+.tree-badge.db    { background: var(--db-bg);   color: var(--db); }
+.tree-badge.svc   { background: var(--svc-bg);  color: var(--svc); }
+.tree-badge.infra { background: var(--infra-bg);color: var(--infra); }
+.tree-badge.util  { background: var(--util-bg); color: var(--util); }
+
+/* dir rows (non-clickable) */
+.tree-dir {
+  padding: 8px 16px 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dir-icon {
+  font-size: 13px;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+}
+
+/* ── DETAIL PANEL ── */
+.detail-panel {
+  overflow-y: auto;
+  padding: 32px 40px 60px;
+}
+
+/* welcome */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  gap: 16px;
+  text-align: center;
+  color: var(--muted);
+}
+.welcome-icon {
+  font-size: 48px;
+  opacity: 0.2;
+  font-family: var(--mono);
+  color: var(--ai);
+  letter-spacing: -3px;
+}
+.welcome h2 { font-size: 16px; font-weight: 500; color: var(--dim); }
+.welcome p { font-size: 13px; max-width: 300px; line-height: 1.6; }
+
+/* module detail */
+.mod-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.mod-icon-box {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.mod-title-area { flex: 1; }
+.mod-name {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 2px;
+}
+.mod-path {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.mod-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.mod-tag {
+  font-size: 11px; padding: 3px 10px; border-radius: 20px;
+  font-family: var(--mono);
+  border: 1px solid;
+}
+
+/* sections */
+.section { margin-bottom: 28px; }
+.section-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.what-text {
+  font-size: 14px;
+  color: #b0b8d0;
+  line-height: 1.7;
+}
+
+/* flow steps */
+.flow-list { display: flex; flex-direction: column; gap: 0; }
+.flow-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.flow-step:last-child { border-bottom: none; }
+.step-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.step-text {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: #9ba4c0;
+  line-height: 1.6;
+  padding-top: 2px;
+}
+.step-text strong { color: var(--text); font-weight: 500; }
+
+/* connections */
+.conn-grid { display: flex; flex-direction: column; gap: 6px; }
+.conn-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.conn-row:hover { background: var(--bg4); border-color: var(--border2); }
+.conn-arrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.conn-name {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.conn-desc {
+  font-size: 12px;
+  color: var(--muted);
+  flex: 1;
+}
+
+/* code block */
+.code-block {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  color: #8892aa;
+  overflow-x: auto;
+}
+.code-block .c { color: #4a5070; } /* comment */
+.code-block .k { color: #a78bfa; } /* keyword */
+.code-block .f { color: #60a5fa; } /* function */
+.code-block .s { color: #86efac; } /* string */
+.code-block .p { color: #fbbf24; } /* param */
+.code-block .n { color: var(--text); } /* name */
+
+/* data flow diagram */
+.flow-diagram {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+}
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  min-width: max-content;
+}
+.flow-node {
+  display: flex; align-items: center; justify-content: center;
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid;
+}
+.flow-arr {
+  color: var(--dim);
+  font-size: 14px;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-title">enterprise_rag_system<span>/</span></div>
+    <div class="header-sub">Click any file to explore its role, connections, and usage</div>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--api)"></div>API layer</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--ai)"></div>AI / RAG</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--db)"></div>Database</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--svc)"></div>Services</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--infra)"></div>Infra / Docker</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--util)"></div>Utilities</div>
+  </div>
+</header>
+
+<div class="page">
+
+<!-- ── TREE ── -->
+<nav class="tree-panel" id="tree">
+
+  <!-- Root files -->
+  <div class="tree-section">
+    <div class="tree-group-label">root</div>
+    <div class="tree-item c-infra" data-key="dockerfile" onclick="show(this,'dockerfile')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:rgba(245,158,11,0.15);color:var(--infra)">D</div>
+        <span class="tree-name">Dockerfile</span>
+        <span class="tree-badge infra">infra</span>
+      </div>
+    </div>
+    <div class="tree-item c-infra" data-key="compose" onclick="show(this,'compose')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:rgba(245,158,11,0.15);color:var(--infra)">C</div>
+        <span class="tree-name">docker-compose.yml</span>
+        <span class="tree-badge infra">infra</span>
+      </div>
+    </div>
+    <div class="tree-item c-util" data-key="requirements" onclick="show(this,'requirements')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--util-bg);color:var(--util)">R</div>
+        <span class="tree-name">requirements.txt</span>
+        <span class="tree-badge util">deps</span>
+      </div>
+    </div>
+    <div class="tree-item c-util" data-key="env" onclick="show(this,'env')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--util-bg);color:var(--util)">.e</div>
+        <span class="tree-name">.env</span>
+        <span class="tree-badge util">config</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- app/ -->
+  <div class="tree-section">
+    <div class="tree-group-label">app/</div>
+    <div class="tree-item c-api" data-key="main" onclick="show(this,'main')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--api-bg);color:var(--api)">M</div>
+        <span class="tree-name">main.py <span class="dir-name">← entry point</span></span>
+        <span class="tree-badge api">API</span>
+      </div>
+    </div>
+    <div class="tree-item c-util" data-key="config" onclick="show(this,'config')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--util-bg);color:var(--util)">⚙</div>
+        <span class="tree-name">config.py</span>
+        <span class="tree-badge util">cfg</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- app/api/ -->
+  <div class="tree-section">
+    <div class="tree-group-label">app/api/ — HTTP routes</div>
+    <div class="tree-item c-api" data-key="chat" onclick="show(this,'chat')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--api-bg);color:var(--api)">💬</div>
+        <span class="tree-name">chat.py <span class="dir-name">POST /chat</span></span>
+        <span class="tree-badge api">API</span>
+      </div>
+    </div>
+    <div class="tree-item c-api" data-key="upload" onclick="show(this,'upload')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--api-bg);color:var(--api)">↑</div>
+        <span class="tree-name">upload.py <span class="dir-name">POST /upload-pdf</span></span>
+        <span class="tree-badge api">API</span>
+      </div>
+    </div>
+    <div class="tree-item c-api" data-key="health" onclick="show(this,'health')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--api-bg);color:var(--api)">♥</div>
+        <span class="tree-name">health.py <span class="dir-name">GET /health</span></span>
+        <span class="tree-badge api">API</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- app/agents/ -->
+  <div class="tree-section">
+    <div class="tree-group-label">app/agents/ — LangGraph multi-agent</div>
+    <div class="tree-item c-ai" data-key="router" onclick="show(this,'router')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">⇄</div>
+        <span class="tree-name">router_agent.py <span class="dir-name">← classifier</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+    <div class="tree-item c-ai" data-key="pdf_agent" onclick="show(this,'pdf_agent')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">📄</div>
+        <span class="tree-name">pdf_agent.py <span class="dir-name">RAG on PDFs</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+    <div class="tree-item c-ai" data-key="sql_agent" onclick="show(this,'sql_agent')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">🗄</div>
+        <span class="tree-name">sql_agent.py <span class="dir-name">NL → SQL</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+    <div class="tree-item c-ai" data-key="web_agent" onclick="show(this,'web_agent')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">🌐</div>
+        <span class="tree-name">web_agent.py <span class="dir-name">URL scrape + RAG</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- app/rag/ -->
+  <div class="tree-section">
+    <div class="tree-group-label">app/rag/ — RAG pipeline</div>
+    <div class="tree-item c-ai" data-key="ingestion" onclick="show(this,'ingestion')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">⬇</div>
+        <span class="tree-name">ingestion.py <span class="dir-name">PDF → vectors</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+    <div class="tree-item c-ai" data-key="embeddings" onclick="show(this,'embeddings')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">≋</div>
+        <span class="tree-name">embeddings.py <span class="dir-name">HF model</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+    <div class="tree-item c-ai" data-key="vector_store" onclick="show(this,'vector_store')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">◫</div>
+        <span class="tree-name">vector_store.py <span class="dir-name">ChromaDB</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+    <div class="tree-item c-ai" data-key="retriever" onclick="show(this,'retriever')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--ai-bg);color:var(--ai)">⌕</div>
+        <span class="tree-name">retriever.py <span class="dir-name">context builder</span></span>
+        <span class="tree-badge ai">AI</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- app/database/ -->
+  <div class="tree-section">
+    <div class="tree-group-label">app/database/ — PostgreSQL ORM</div>
+    <div class="tree-item c-db" data-key="db" onclick="show(this,'db')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--db-bg);color:var(--db)">⚡</div>
+        <span class="tree-name">db.py <span class="dir-name">engine + session</span></span>
+        <span class="tree-badge db">DB</span>
+      </div>
+    </div>
+    <div class="tree-item c-db" data-key="models" onclick="show(this,'models')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--db-bg);color:var(--db)">▦</div>
+        <span class="tree-name">models.py <span class="dir-name">ORM tables</span></span>
+        <span class="tree-badge db">DB</span>
+      </div>
+    </div>
+    <div class="tree-item c-db" data-key="schemas" onclick="show(this,'schemas')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--db-bg);color:var(--db)">{}  </div>
+        <span class="tree-name">schemas.py <span class="dir-name">Pydantic I/O</span></span>
+        <span class="tree-badge db">DB</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- app/services/ -->
+  <div class="tree-section">
+    <div class="tree-group-label">app/services/ — business logic</div>
+    <div class="tree-item c-svc" data-key="pdf_service" onclick="show(this,'pdf_service')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--svc-bg);color:var(--svc)">📁</div>
+        <span class="tree-name">pdf_service.py</span>
+        <span class="tree-badge svc">SVC</span>
+      </div>
+    </div>
+    <div class="tree-item c-svc" data-key="chat_service" onclick="show(this,'chat_service')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--svc-bg);color:var(--svc)">🕐</div>
+        <span class="tree-name">chat_service.py</span>
+        <span class="tree-badge svc">SVC</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- app/utils/ -->
+  <div class="tree-section">
+    <div class="tree-group-label">app/utils/ + tests/</div>
+    <div class="tree-item c-util" data-key="logger" onclick="show(this,'logger')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--util-bg);color:var(--util)">></div>
+        <span class="tree-name">utils/logger.py</span>
+        <span class="tree-badge util">util</span>
+      </div>
+    </div>
+    <div class="tree-item c-util" data-key="tests" onclick="show(this,'tests')">
+      <div class="tree-indent">
+        <div class="tree-lines"><div class="branch"></div></div>
+        <div class="tree-icon" style="background:var(--util-bg);color:var(--util)">✓</div>
+        <span class="tree-name">tests/test_system.py</span>
+        <span class="tree-badge util">test</span>
+      </div>
+    </div>
+  </div>
+
+</nav>
+
+<!-- ── DETAIL ── -->
+<main class="detail-panel" id="detail">
+  <div class="welcome">
+    <div class="welcome-icon">{ }</div>
+    <h2>Select a file to explore</h2>
+    <p>Click any file in the tree to see what it does, how it connects to other modules, and how to use it.</p>
+  </div>
+</main>
+
+</div>
+
+<script>
+const C = {
+  api:   { accent: '#3b82f6', bg: 'rgba(59,130,246,0.15)',  badge: 'api',   label: 'API layer' },
+  ai:    { accent: '#a78bfa', bg: 'rgba(167,139,250,0.15)', badge: 'ai',    label: 'AI / RAG' },
+  db:    { accent: '#34d399', bg: 'rgba(52,211,153,0.15)',  badge: 'db',    label: 'Database' },
+  svc:   { accent: '#fb923c', bg: 'rgba(251,146,60,0.15)',  badge: 'svc',   label: 'Service' },
+  infra: { accent: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  badge: 'infra', label: 'Infrastructure' },
+  util:  { accent: '#94a3b8', bg: 'rgba(148,163,184,0.12)', badge: 'util',  label: 'Utility' },
+};
+
+const MODULES = {
+  main: {
+    cat: 'api', icon: 'M', name: 'main.py', path: 'app/main.py',
+    tags: ['FastAPI', 'entry-point', 'lifespan'],
+    what: 'Application factory and entry point. Creates the FastAPI app, attaches CORS middleware, registers the three API routers (health, upload, chat), and runs startup/shutdown logic — creating all DB tables on first boot.',
+    flow: [
+      ['<strong>create_app()</strong>', 'instantiates FastAPI with title, version, docs URLs'],
+      ['<strong>CORSMiddleware</strong>', 'allows cross-origin requests from any origin'],
+      ['<strong>include_router()</strong>', 'mounts health, upload, and chat routers under /api/v1'],
+      ['<strong>lifespan()</strong>', 'async context manager: calls create_tables() on startup'],
+      ['<strong>Uvicorn</strong>', 'serves the app on port 8080 with 2 workers'],
+    ],
+    connections: [
+      { name: 'health.py',  desc: 'mounts health router',              dir: 'imports', col: 'api' },
+      { name: 'upload.py',  desc: 'mounts upload router',              dir: 'imports', col: 'api' },
+      { name: 'chat.py',    desc: 'mounts chat router',                dir: 'imports', col: 'api' },
+      { name: 'config.py',  desc: 'reads APP_NAME, APP_VERSION',       dir: 'uses',    col: 'util' },
+      { name: 'db.py',      desc: 'calls create_tables() on startup',  dir: 'calls',   col: 'db' },
+    ],
+    code: `<span class="c"># Start the system:</span>
+<span class="n">docker</span> <span class="n">compose</span> <span class="n">up</span> <span class="p">--build</span>
+
+<span class="c"># Or locally:</span>
+<span class="n">uvicorn</span> <span class="n">app.main:app</span> <span class="p">--reload</span> <span class="p">--port</span> <span class="n">8080</span>`,
+  },
+
+  config: {
+    cat: 'util', icon: '⚙', name: 'config.py', path: 'app/config.py',
+    tags: ['pydantic-settings', 'env', 'singleton'],
+    what: 'Central configuration hub. Uses pydantic-settings to read every environment variable from .env into a typed Settings object. All other modules import from here — never read os.environ directly. Change any behaviour by editing .env only.',
+    flow: [
+      ['<strong>BaseSettings</strong>', 'pydantic reads .env file automatically at import time'],
+      ['<strong>Settings class</strong>', 'declares every config value with its type and default'],
+      ['<strong>@lru_cache</strong>', 'get_settings() is called once; result cached for the process lifetime'],
+      ['<strong>settings singleton</strong>', 'module-level object imported by all other modules'],
+    ],
+    connections: [
+      { name: '.env file',      desc: 'reads all values from here',              dir: 'reads',    col: 'util' },
+      { name: 'every module',   desc: "from app.config import settings",         dir: 'used by',  col: 'util' },
+    ],
+    code: `<span class="c"># .env — edit to configure:</span>
+<span class="n">HUGGINGFACE_API_KEY</span>=<span class="s">hf_your_key</span>
+<span class="n">CHUNK_SIZE</span>=<span class="s">512</span>
+<span class="n">TOP_K_RESULTS</span>=<span class="s">5</span>
+
+<span class="c"># In any module:</span>
+<span class="k">from</span> <span class="n">app.config</span> <span class="k">import</span> <span class="n">settings</span>
+<span class="f">print</span>(<span class="n">settings</span>.<span class="n">CHUNK_SIZE</span>)  <span class="c"># 512</span>`,
+  },
+
+  chat: {
+    cat: 'api', icon: '💬', name: 'chat.py', path: 'app/api/chat.py',
+    tags: ['FastAPI router', 'POST /chat', 'GET /chat/history'],
+    what: 'The primary Q&A endpoint. Receives a user query, passes it to the Router Agent pipeline, persists the exchange to chat_history, and returns the answer. Also exposes a history endpoint for replaying past sessions.',
+    flow: [
+      ['<strong>POST /api/v1/chat</strong>', 'receives { query, session_id, user_id? }'],
+      ['<strong>run_rag_pipeline()</strong>', 'calls router_agent → classifies → dispatches to specialist agent'],
+      ['<strong>ChatService.save_message()</strong>', 'persists Q&A to chat_history table'],
+      ['<strong>ChatResponse</strong>', 'returns { answer, agent_used, sources } as JSON'],
+      ['<strong>GET /chat/history/{id}</strong>', 'returns last N messages for a session'],
+    ],
+    connections: [
+      { name: 'router_agent.py', desc: 'calls run_rag_pipeline()',         dir: 'calls',     col: 'ai' },
+      { name: 'chat_service.py', desc: 'saves Q&A to DB',                  dir: 'calls',     col: 'svc' },
+      { name: 'db.py',           desc: 'AsyncSession via Depends(get_db)', dir: 'uses',      col: 'db' },
+      { name: 'schemas.py',      desc: 'ChatRequest / ChatResponse types', dir: 'uses',      col: 'db' },
+    ],
+    code: `<span class="n">curl</span> <span class="p">-X</span> <span class="n">POST</span> <span class="s">http://localhost:8080/api/v1/chat</span> <span class="p">\\</span>
+  <span class="p">-H</span> <span class="s">"Content-Type: application/json"</span> <span class="p">\\</span>
+  <span class="p">-d</span> <span class="s">'{"query":"What are the key findings?",
+       "session_id":"session-1"}'</span>
+
+<span class="c"># Get history:</span>
+<span class="n">curl</span> <span class="s">http://localhost:8080/api/v1/chat/history/session-1</span>`,
+  },
+
+  upload: {
+    cat: 'api', icon: '↑', name: 'upload.py', path: 'app/api/upload.py',
+    tags: ['FastAPI router', 'POST /upload-pdf', 'POST /ingest', 'GET /documents'],
+    what: 'Handles PDF file uploads, triggers background ingestion, and manages the document listing. The upload is instant — file is saved and you get a response immediately while chunking/embedding runs in the background.',
+    flow: [
+      ['<strong>POST /upload-pdf</strong>', 'receives multipart file, calls PDFService.save_upload()'],
+      ['<strong>BackgroundTasks</strong>', 'queues _run_ingestion() so response is instant'],
+      ['<strong>_run_ingestion()</strong>', 'extract text → chunk → embed → ChromaDB → update status'],
+      ['<strong>status: pending → indexed</strong>', 'poll GET /documents/{id} to track progress'],
+      ['<strong>POST /ingest</strong>', 'manually re-triggers ingestion for a specific document'],
+    ],
+    connections: [
+      { name: 'pdf_service.py', desc: 'saves file, manages Document DB record', dir: 'calls',    col: 'svc' },
+      { name: 'ingestion.py',   desc: 'background: runs the full RAG pipeline', dir: 'calls',    col: 'ai' },
+      { name: 'db.py',          desc: 'DB session dependency',                  dir: 'uses',     col: 'db' },
+      { name: 'schemas.py',     desc: 'DocumentRead / IngestResponse',          dir: 'uses',     col: 'db' },
+    ],
+    code: `<span class="c"># Upload a PDF:</span>
+<span class="n">curl</span> <span class="p">-X</span> <span class="n">POST</span> <span class="s">http://localhost:8080/api/v1/upload-pdf</span> <span class="p">\\</span>
+  <span class="p">-F</span> <span class="s">"file=@report.pdf"</span>
+
+<span class="c"># Track status (pending → processing → indexed):</span>
+<span class="n">curl</span> <span class="s">http://localhost:8080/api/v1/documents/{id}</span>
+
+<span class="c"># List all documents:</span>
+<span class="n">curl</span> <span class="s">http://localhost:8080/api/v1/documents</span>`,
+  },
+
+  health: {
+    cat: 'api', icon: '♥', name: 'health.py', path: 'app/api/health.py',
+    tags: ['FastAPI router', 'GET /health', 'monitoring'],
+    what: 'Health check endpoint that pings PostgreSQL (SELECT 1) and ChromaDB (heartbeat). Returns healthy or degraded. Used by Docker\'s HEALTHCHECK directive and any external monitoring tool.',
+    flow: [
+      ['<strong>GET /health</strong>', 'runs SELECT 1 against PostgreSQL via injected session'],
+      ['<strong>client.heartbeat()</strong>', 'pings ChromaDB HTTP server'],
+      ['<strong>overall status</strong>', 'healthy if all services OK, degraded otherwise'],
+      ['<strong>Docker uses this</strong>', 'checks every 30s; restarts container if it fails 3× in a row'],
+    ],
+    connections: [
+      { name: 'db.py',          desc: 'pings Postgres via Depends(get_db)', dir: 'uses',     col: 'db' },
+      { name: 'vector_store.py',desc: 'pings ChromaDB heartbeat',           dir: 'uses',     col: 'ai' },
+      { name: 'config.py',      desc: 'reads APP_VERSION',                  dir: 'uses',     col: 'util' },
+    ],
+    code: `<span class="n">curl</span> <span class="s">http://localhost:8080/health</span>
+
+<span class="c"># Response:</span>
+{
+  <span class="s">"status"</span>: <span class="s">"healthy"</span>,
+  <span class="s">"version"</span>: <span class="s">"1.0.0"</span>,
+  <span class="s">"services"</span>: {
+    <span class="s">"postgresql"</span>: <span class="s">"healthy"</span>,
+    <span class="s">"chromadb"</span>: <span class="s">"healthy"</span>
+  }
+}`,
+  },
+
+  router: {
+    cat: 'ai', icon: '⇄', name: 'router_agent.py', path: 'app/agents/router_agent.py',
+    tags: ['LangGraph', 'StateGraph', 'classifier', 'dispatcher'],
+    what: 'The brain of the system. A LangGraph StateGraph that classifies every incoming query with keyword scoring and dispatches it to the right specialist agent. Defines the full multi-agent workflow graph with nodes, edges, and conditional routing.',
+    flow: [
+      ['<strong>AgentState</strong>', 'TypedDict shared across all graph nodes: query, route, answer, sources'],
+      ['<strong>classify_node()</strong>', 'scores keywords → sets route to "pdf", "sql", or "web"'],
+      ['<strong>conditional_edge</strong>', 'routes to pdf_node / sql_node / web_node based on route'],
+      ['<strong>agent node runs</strong>', 'fills state.answer + state.sources'],
+      ['<strong>run_rag_pipeline()</strong>', 'public entry point called by chat.py'],
+    ],
+    connections: [
+      { name: 'pdf_agent.py',    desc: 'pdf_node calls PDFAgent.answer()',       dir: 'calls',     col: 'ai' },
+      { name: 'sql_agent.py',    desc: 'sql_node calls SQLAgent.answer()',       dir: 'calls',     col: 'ai' },
+      { name: 'web_agent.py',    desc: 'web_node calls WebAgent.answer()',       dir: 'calls',     col: 'ai' },
+      { name: 'chat.py',         desc: 'calls run_rag_pipeline(query, db)',      dir: 'called by', col: 'api' },
+    ],
+    code: `<span class="c"># Routing rules (keyword scoring):</span>
+<span class="s">"What does the PDF say about risk?"</span>  → <span class="p">pdf</span>
+<span class="s">"How many users registered?"</span>         → <span class="p">sql</span>
+<span class="s">"Summarise https://example.com"</span>      → <span class="p">web</span>
+<span class="s">"Tell me something"</span>                  → <span class="p">pdf</span> <span class="c">(default)</span>
+
+<span class="k">result</span> = <span class="k">await</span> <span class="f">run_rag_pipeline</span>(
+  <span class="p">query</span>=<span class="s">"What are the findings?"</span>,
+  <span class="p">session_id</span>=<span class="s">"s1"</span>, <span class="p">db</span>=<span class="n">db</span>
+)`,
+  },
+
+  pdf_agent: {
+    cat: 'ai', icon: '📄', name: 'pdf_agent.py', path: 'app/agents/pdf_agent.py',
+    tags: ['RAG', 'HuggingFace API', 'vector search'],
+    what: 'Answers questions about uploaded PDFs. Retrieves the top-K most relevant chunks from ChromaDB, builds a context-rich prompt, sends it to the HuggingFace Inference API, and returns the answer with source citations. Falls back gracefully if the LLM is unavailable.',
+    flow: [
+      ['<strong>RAGRetriever.retrieve()</strong>', 'gets top-K relevant chunks from ChromaDB'],
+      ['<strong>format_prompt()</strong>', 'builds: "Answer using only this context… Context: … Question: …"'],
+      ['<strong>POST to HF API</strong>', 'sends prompt to mistralai/Mistral-7B-Instruct-v0.2'],
+      ['<strong>parse response</strong>', 'extracts generated_text from JSON response'],
+      ['<strong>returns</strong>', '{ answer, sources: [{source, page, score}], agent: "pdf_agent" }'],
+    ],
+    connections: [
+      { name: 'retriever.py',    desc: 'calls retrieve() + format_prompt()',     dir: 'calls',     col: 'ai' },
+      { name: 'router_agent.py', desc: 'invoked by pdf_node(state)',             dir: 'called by', col: 'ai' },
+      { name: 'config.py',       desc: 'reads HF_LLM_MODEL, MAX_TOKENS, TEMP',  dir: 'uses',      col: 'util' },
+    ],
+    code: `<span class="c"># Triggered automatically for PDF questions.</span>
+<span class="c"># Direct usage:</span>
+<span class="k">from</span> <span class="n">app.agents.pdf_agent</span> <span class="k">import</span> <span class="n">PDFAgent</span>
+
+<span class="n">agent</span> = <span class="f">PDFAgent</span>()
+<span class="n">result</span> = <span class="k">await</span> <span class="n">agent</span>.<span class="f">answer</span>(<span class="s">"What is the main risk?"</span>)
+<span class="f">print</span>(<span class="n">result</span>[<span class="s">"answer"</span>])
+<span class="f">print</span>(<span class="n">result</span>[<span class="s">"sources"</span>])  <span class="c"># [{source, page, score}]</span>`,
+  },
+
+  sql_agent: {
+    cat: 'ai', icon: '🗄', name: 'sql_agent.py', path: 'app/agents/sql_agent.py',
+    tags: ['NL→SQL', 'HuggingFace API', 'SQLAlchemy', 'safe execution'],
+    what: 'Converts natural language questions into safe SQL queries and executes them against PostgreSQL. Sends the question + full DB schema to the LLM to generate SQL, then validates it (SELECT-only allowlist, DDL/DML blocklist), executes via SQLAlchemy, and formats the results.',
+    flow: [
+      ['<strong>_generate_sql()</strong>', 'sends question + schema to LLM; strips markdown fences from output'],
+      ['<strong>_is_safe()</strong>', 'blocks anything that isn\'t SELECT; blocks DROP, DELETE, INSERT, etc.'],
+      ['<strong>db.execute(text(sql))</strong>', 'runs via SQLAlchemy async session'],
+      ['<strong>_format_results()</strong>', 'formats rows as readable text (capped at 20 rows)'],
+      ['<strong>returns</strong>', '{ answer, sql, rows, agent: "sql_agent" }'],
+    ],
+    connections: [
+      { name: 'router_agent.py', desc: 'invoked by sql_node(state)',             dir: 'called by', col: 'ai' },
+      { name: 'db.py',           desc: 'AsyncSession passed in constructor',     dir: 'uses',      col: 'db' },
+      { name: 'config.py',       desc: 'reads HF_LLM_MODEL',                    dir: 'uses',      col: 'util' },
+    ],
+    code: `<span class="c"># Example questions that route here:</span>
+<span class="s">"How many documents are indexed?"</span>
+  → <span class="k">SELECT</span> <span class="f">count</span>(*) <span class="k">FROM</span> <span class="n">documents</span> <span class="k">WHERE</span> <span class="n">status</span>=<span class="s">'indexed'</span>;
+
+<span class="s">"List users created this week"</span>
+  → <span class="k">SELECT</span> * <span class="k">FROM</span> <span class="n">users</span> <span class="k">WHERE</span> <span class="n">created_at</span> > <span class="n">now</span>() - <span class="n">interval</span> <span class="s">'7 days'</span>;
+
+<span class="c"># Blocked (safety):</span>
+<span class="s">"DROP TABLE users"</span>  → <span class="p">rejected</span>`,
+  },
+
+  web_agent: {
+    cat: 'ai', icon: '🌐', name: 'web_agent.py', path: 'app/agents/web_agent.py',
+    tags: ['httpx', 'BeautifulSoup', 'on-the-fly RAG', 'URL extraction'],
+    what: 'Fetches a URL from the query, scrapes and cleans the page (strips nav/footer/scripts), chunks + embeds its content into a temporary per-domain ChromaDB collection, then runs similarity search and LLM generation to answer questions about it.',
+    flow: [
+      ['<strong>_extract_url()</strong>', 'regex finds http/https URL inside the query string'],
+      ['<strong>httpx.AsyncClient.get()</strong>', 'fetches page; BeautifulSoup strips boilerplate'],
+      ['<strong>RecursiveCharacterTextSplitter</strong>', 'chunks page text (512 tokens, 64 overlap)'],
+      ['<strong>VectorStore.add_documents()</strong>', 'upserts to per-domain temp collection'],
+      ['<strong>similarity_search + LLM</strong>', 'same RAG flow as PDFAgent'],
+    ],
+    connections: [
+      { name: 'router_agent.py', desc: 'invoked by web_node(state)',              dir: 'called by', col: 'ai' },
+      { name: 'vector_store.py', desc: 'stores and searches page chunks',         dir: 'calls',     col: 'ai' },
+      { name: 'retriever.py',    desc: 'uses format_prompt()',                    dir: 'calls',     col: 'ai' },
+      { name: 'config.py',       desc: 'reads WEB_TIMEOUT_SECONDS, CHUNK_SIZE',  dir: 'uses',      col: 'util' },
+    ],
+    code: `<span class="c"># Include a URL in your chat query:</span>
+<span class="s">"Summarise https://en.wikipedia.org/wiki/RAG"</span>
+<span class="s">"What does https://arxiv.org/abs/2005.11401 say?"</span>
+
+<span class="c"># URL extracted automatically — no special syntax needed.</span>
+<span class="c"># Collection name is slugged from the domain, e.g.:</span>
+<span class="c"># "web_en_wikipedia_org"</span>`,
+  },
+
+  ingestion: {
+    cat: 'ai', icon: '⬇', name: 'ingestion.py', path: 'app/rag/ingestion.py',
+    tags: ['PyMuPDF', 'RecursiveCharacterTextSplitter', 'background task'],
+    what: 'The full PDF ingestion pipeline. Runs in the background after upload. Takes a PDF path, extracts text page-by-page with PyMuPDF, splits into overlapping chunks, attaches metadata, then upserts all chunks with embeddings into ChromaDB.',
+    flow: [
+      ['<strong>extract_text_from_pdf()</strong>', 'PyMuPDF opens PDF; extracts text per page'],
+      ['<strong>chunk_pages()</strong>', 'RecursiveCharacterTextSplitter splits at 512 tokens, 64 overlap'],
+      ['<strong>metadata per chunk</strong>', '{ document_id, source: filename, page: N }'],
+      ['<strong>VectorStore.add_documents()</strong>', 'embeds + upserts to ChromaDB'],
+      ['<strong>returns chunk count</strong>', 'upload.py updates Document.status to "indexed"'],
+    ],
+    connections: [
+      { name: 'vector_store.py', desc: 'calls add_documents() to index chunks',  dir: 'calls',     col: 'ai' },
+      { name: 'upload.py',       desc: 'called as FastAPI BackgroundTask',       dir: 'called by', col: 'api' },
+      { name: 'config.py',       desc: 'reads CHUNK_SIZE, CHUNK_OVERLAP',        dir: 'uses',      col: 'util' },
+    ],
+    code: `<span class="k">from</span> <span class="n">app.rag.ingestion</span> <span class="k">import</span> <span class="n">ingest_pdf</span>
+
+<span class="c"># Called automatically by upload.py background task.</span>
+<span class="c"># Manual usage:</span>
+<span class="n">count</span> = <span class="f">ingest_pdf</span>(
+  <span class="p">file_path</span>=<span class="s">"uploads/abc123.pdf"</span>,
+  <span class="p">document_id</span>=<span class="s">"uuid-here"</span>,
+  <span class="p">source_name</span>=<span class="s">"Annual Report 2024"</span>
+)
+<span class="f">print</span>(<span class="n">f</span><span class="s">"Indexed {count} chunks"</span>)`,
+  },
+
+  embeddings: {
+    cat: 'ai', icon: '≋', name: 'embeddings.py', path: 'app/rag/embeddings.py',
+    tags: ['sentence-transformers', 'all-MiniLM-L6-v2', '@lru_cache', 'local CPU'],
+    what: 'Loads the HuggingFace sentence-transformer embedding model once and caches it. Provides embed_texts() for batch indexing and embed_query() for single query vectors. Runs entirely locally on CPU — no API key needed for embeddings.',
+    flow: [
+      ['<strong>get_embedding_model()</strong>', '@lru_cache — model loaded once, reused forever'],
+      ['<strong>HuggingFaceEmbeddings</strong>', 'all-MiniLM-L6-v2: 384-dim vectors, cosine-normalized'],
+      ['<strong>embed_texts(texts)</strong>', 'used by VectorStore when indexing new chunks'],
+      ['<strong>embed_query(query)</strong>', 'used by VectorStore when searching'],
+      ['<strong>first call</strong>', 'downloads ~90MB model from HuggingFace Hub'],
+    ],
+    connections: [
+      { name: 'vector_store.py', desc: 'calls embed_documents() + embed_query()', dir: 'called by', col: 'ai' },
+      { name: 'config.py',       desc: 'reads HF_EMBEDDING_MODEL',               dir: 'uses',      col: 'util' },
+    ],
+    code: `<span class="k">from</span> <span class="n">app.rag.embeddings</span> <span class="k">import</span> <span class="n">embed_query</span>, <span class="n">embed_texts</span>
+
+<span class="c"># Single query vector (for search):</span>
+<span class="n">vec</span> = <span class="f">embed_query</span>(<span class="s">"What is machine learning?"</span>)
+<span class="f">print</span>(<span class="f">len</span>(<span class="n">vec</span>))  <span class="c"># 384</span>
+
+<span class="c"># Batch for indexing:</span>
+<span class="n">vecs</span> = <span class="f">embed_texts</span>([<span class="s">"chunk 1"</span>, <span class="s">"chunk 2"</span>])
+<span class="f">print</span>(<span class="f">len</span>(<span class="n">vecs</span>))  <span class="c"># 2</span>`,
+  },
+
+  vector_store: {
+    cat: 'ai', icon: '◫', name: 'vector_store.py', path: 'app/rag/vector_store.py',
+    tags: ['ChromaDB', 'cosine similarity', 'upsert', 'HNSW'],
+    what: 'The ChromaDB interface layer. Manages connection to the ChromaDB HTTP server, creates/gets collections with cosine similarity, upserts document chunks with their embeddings, and runs top-K vector similarity search.',
+    flow: [
+      ['<strong>get_chroma_client()</strong>', '@lru_cache — one HTTP client per process'],
+      ['<strong>get_or_create_collection()</strong>', 'cosine HNSW index; creates on first call'],
+      ['<strong>add_documents()</strong>', 'embeds texts then calls collection.upsert()'],
+      ['<strong>similarity_search()</strong>', 'embeds query → collection.query() → ranked hits + distances'],
+      ['<strong>delete_by_document_id()</strong>', 'removes all chunks for a document (re-index support)'],
+    ],
+    connections: [
+      { name: 'ingestion.py',    desc: 'calls add_documents() to index PDF chunks',  dir: 'called by', col: 'ai' },
+      { name: 'retriever.py',    desc: 'calls similarity_search()',                  dir: 'called by', col: 'ai' },
+      { name: 'web_agent.py',    desc: 'calls add_documents() + similarity_search()', dir: 'called by', col: 'ai' },
+      { name: 'embeddings.py',   desc: 'uses HF embedding model',                   dir: 'calls',     col: 'ai' },
+      { name: 'health.py',       desc: 'calls heartbeat() to check service',        dir: 'called by', col: 'api' },
+    ],
+    code: `<span class="k">from</span> <span class="n">app.rag.vector_store</span> <span class="k">import</span> <span class="n">VectorStore</span>
+<span class="n">store</span> = <span class="f">VectorStore</span>()
+
+<span class="c"># Index chunks:</span>
+<span class="n">store</span>.<span class="f">add_documents</span>(<span class="n">texts</span>, <span class="n">metadatas</span>, <span class="n">ids</span>)
+
+<span class="c"># Search (returns ranked hits with distances):</span>
+<span class="n">hits</span> = <span class="n">store</span>.<span class="f">similarity_search</span>(<span class="s">"ML accuracy"</span>, <span class="p">k</span>=<span class="n">5</span>)
+<span class="k">for</span> <span class="n">h</span> <span class="k">in</span> <span class="n">hits</span>:
+    <span class="f">print</span>(<span class="n">h</span>[<span class="s">"text"</span>], <span class="n">h</span>[<span class="s">"distance"</span>])`,
+  },
+
+  retriever: {
+    cat: 'ai', icon: '⌕', name: 'retriever.py', path: 'app/rag/retriever.py',
+    tags: ['context assembly', 'prompt builder', 'source citations'],
+    what: 'The bridge between vector search and the LLM. Fetches top-K chunks, formats them as a readable context string with source labels and page numbers, then builds the final LLM prompt. Used by both PDFAgent and WebAgent.',
+    flow: [
+      ['<strong>retrieve(query)</strong>', 'calls VectorStore.similarity_search() → top-K hits'],
+      ['<strong>format context</strong>', 'each hit becomes: [Source N: file.pdf, page 3]\\nchunk text'],
+      ['<strong>returns tuple</strong>', '(formatted_context_string, raw_hits_list)'],
+      ['<strong>format_prompt()</strong>', '"Answer using ONLY context below... Context:... Question:..."'],
+      ['<strong>agents use both</strong>', 'retrieve() → context, then format_prompt() → LLM input'],
+    ],
+    connections: [
+      { name: 'vector_store.py', desc: 'calls similarity_search()',               dir: 'calls',     col: 'ai' },
+      { name: 'pdf_agent.py',    desc: 'calls retrieve() + format_prompt()',      dir: 'called by', col: 'ai' },
+      { name: 'web_agent.py',    desc: 'calls format_prompt()',                   dir: 'called by', col: 'ai' },
+    ],
+    code: `<span class="k">from</span> <span class="n">app.rag.retriever</span> <span class="k">import</span> <span class="n">RAGRetriever</span>
+<span class="n">r</span> = <span class="f">RAGRetriever</span>()
+
+<span class="n">context</span>, <span class="n">hits</span> = <span class="n">r</span>.<span class="f">retrieve</span>(<span class="s">"What is the revenue?"</span>)
+<span class="c"># context → "[Source 1: report.pdf, page 4]\nRevenue..."</span>
+
+<span class="n">prompt</span> = <span class="n">r</span>.<span class="f">format_prompt</span>(<span class="s">"What is the revenue?"</span>, <span class="n">context</span>)
+<span class="c"># Ready to send to HuggingFace API</span>`,
+  },
+
+  db: {
+    cat: 'db', icon: '⚡', name: 'db.py', path: 'app/database/db.py',
+    tags: ['SQLAlchemy async', 'connection pool', 'dependency injection'],
+    what: 'Creates the async SQLAlchemy engine and session factory. The get_db() function is a FastAPI dependency — every route that touches the database receives an injected session. Auto-commits on success, auto-rollbacks on error.',
+    flow: [
+      ['<strong>create_async_engine()</strong>', 'pool_size=10, max_overflow=20, pool_pre_ping=True'],
+      ['<strong>AsyncSessionLocal</strong>', 'session factory bound to the engine'],
+      ['<strong>get_db()</strong>', 'dependency: yields session, commits, or rolls back on error'],
+      ['<strong>Base</strong>', 'DeclarativeBase shared by all ORM models in models.py'],
+      ['<strong>create_tables()</strong>', 'called on startup; idempotent (uses CREATE IF NOT EXISTS)'],
+    ],
+    connections: [
+      { name: 'models.py',       desc: 'all ORM models inherit Base from here',  dir: 'provides',  col: 'db' },
+      { name: 'chat.py',         desc: 'injects AsyncSession via Depends(get_db)', dir: 'injects into', col: 'api' },
+      { name: 'upload.py',       desc: 'injects AsyncSession via Depends(get_db)', dir: 'injects into', col: 'api' },
+      { name: 'health.py',       desc: 'injects AsyncSession for health ping',   dir: 'injects into', col: 'api' },
+      { name: 'main.py',         desc: 'calls create_tables() at startup',       dir: 'called by', col: 'api' },
+    ],
+    code: `<span class="c"># In any API route — session injected automatically:</span>
+<span class="k">from</span> <span class="n">app.database.db</span> <span class="k">import</span> <span class="n">get_db</span>
+<span class="k">from</span> <span class="n">fastapi</span> <span class="k">import</span> <span class="n">Depends</span>
+
+<span class="k">async def</span> <span class="f">my_route</span>(<span class="p">db</span>: <span class="n">AsyncSession</span> = <span class="f">Depends</span>(<span class="n">get_db</span>)):
+    <span class="n">result</span> = <span class="k">await</span> <span class="n">db</span>.<span class="f">execute</span>(<span class="f">select</span>(<span class="n">User</span>))
+    <span class="k">return</span> <span class="n">result</span>.<span class="f">scalars</span>().<span class="f">all</span>()`,
+  },
+
+  models: {
+    cat: 'db', icon: '▦', name: 'models.py', path: 'app/database/models.py',
+    tags: ['SQLAlchemy ORM', 'PostgreSQL', '3 tables'],
+    what: 'Defines the three PostgreSQL tables as SQLAlchemy ORM classes. These are the actual database schema — SQLAlchemy auto-generates CREATE TABLE from them on startup.',
+    flow: [
+      ['<strong>User</strong>', 'id (UUID), username, email, created_at'],
+      ['<strong>Document</strong>', 'id, filename, file_path, status (pending/processing/indexed/error), chunk_count'],
+      ['<strong>ChatHistory</strong>', 'id, session_id, user_id (FK→User), user_query, response, agent_used, timestamp'],
+      ['<strong>all inherit Base</strong>', 'from db.py — auto-registered in metadata'],
+      ['<strong>relationships</strong>', 'User.chat_sessions → ChatHistory (cascade delete)'],
+    ],
+    connections: [
+      { name: 'db.py',           desc: 'inherits Base; auto-created via metadata', dir: 'uses',      col: 'db' },
+      { name: 'pdf_service.py',  desc: 'creates / reads Document records',        dir: 'used by',   col: 'svc' },
+      { name: 'chat_service.py', desc: 'creates / reads ChatHistory records',     dir: 'used by',   col: 'svc' },
+    ],
+    code: `<span class="c"># Tables created automatically on startup.</span>
+<span class="c"># Direct ORM usage:</span>
+<span class="k">from</span> <span class="n">app.database.models</span> <span class="k">import</span> <span class="n">Document</span>
+
+<span class="c"># Create a record:</span>
+<span class="n">doc</span> = <span class="f">Document</span>(<span class="p">id</span>=<span class="n">uuid</span>, <span class="p">filename</span>=<span class="s">"file.pdf"</span>, <span class="p">status</span>=<span class="s">"pending"</span>)
+<span class="n">db</span>.<span class="f">add</span>(<span class="n">doc</span>); <span class="k">await</span> <span class="n">db</span>.<span class="f">flush</span>()
+
+<span class="c"># Query:</span>
+<span class="n">result</span> = <span class="k">await</span> <span class="n">db</span>.<span class="f">execute</span>(<span class="f">select</span>(<span class="n">Document</span>))`,
+  },
+
+  schemas: {
+    cat: 'db', icon: '{}', name: 'schemas.py', path: 'app/database/schemas.py',
+    tags: ['Pydantic v2', 'request/response', 'validation', 'OpenAPI'],
+    what: 'Pydantic v2 schemas for every API input and output. FastAPI uses these for automatic JSON validation, error responses, and OpenAPI docs generation. Completely separate from the ORM models in models.py.',
+    flow: [
+      ['<strong>ChatRequest</strong>', '{ query, session_id, user_id? } — validates POST /chat body'],
+      ['<strong>ChatResponse</strong>', '{ answer, agent_used, sources } — shapes the chat response'],
+      ['<strong>DocumentRead</strong>', '{ id, filename, status, chunk_count } — shapes document listings'],
+      ['<strong>HealthResponse</strong>', '{ status, version, services: dict } — shapes health check'],
+      ['<strong>auto-validation</strong>', 'wrong type or missing field → 422 Unprocessable Entity'],
+    ],
+    connections: [
+      { name: 'chat.py',   desc: 'ChatRequest (input), ChatResponse (output)',    dir: 'used by', col: 'api' },
+      { name: 'upload.py', desc: 'DocumentRead, IngestRequest, IngestResponse',  dir: 'used by', col: 'api' },
+      { name: 'health.py', desc: 'HealthResponse',                               dir: 'used by', col: 'api' },
+    ],
+    code: `<span class="c"># FastAPI uses these automatically:</span>
+<span class="n">@router</span>.<span class="f">post</span>(<span class="s">"/chat"</span>, <span class="p">response_model</span>=<span class="n">ChatResponse</span>)
+<span class="k">async def</span> <span class="f">chat</span>(<span class="p">payload</span>: <span class="n">ChatRequest</span>) -> <span class="n">ChatResponse</span>:
+    ...
+
+<span class="c"># Invalid input → automatic 422:</span>
+<span class="c"># { "query": 123 }  ← not a string → rejected</span>
+<span class="c"># { }               ← missing query → rejected</span>`,
+  },
+
+  pdf_service: {
+    cat: 'svc', icon: '📁', name: 'pdf_service.py', path: 'app/services/pdf_service.py',
+    tags: ['file I/O', 'size validation', 'DB record management'],
+    what: 'Bridges the upload API and the database. Handles safe file persistence (64KB streaming chunks, UUID-named files, size limit enforcement) and manages all Document DB record operations so the route stays clean.',
+    flow: [
+      ['<strong>save_upload()</strong>', 'streams UploadFile to disk; checks size vs MAX_UPLOAD_SIZE_MB'],
+      ['<strong>UUID naming</strong>', 'saved as {uuid}.pdf — prevents filename collisions and path traversal'],
+      ['<strong>creates Document record</strong>', 'status="pending", stores file_path + file_size_bytes'],
+      ['<strong>update_status()</strong>', 'called by background task: pending→processing→indexed or error'],
+      ['<strong>list_documents() / get_document()</strong>', 'read-only queries for API endpoints'],
+    ],
+    connections: [
+      { name: 'upload.py',  desc: 'calls save_upload(), get_document(), list_documents()', dir: 'called by', col: 'api' },
+      { name: 'models.py',  desc: 'creates / updates Document ORM objects',               dir: 'uses',      col: 'db' },
+      { name: 'db.py',      desc: 'AsyncSession injected in constructor',                 dir: 'uses',      col: 'db' },
+      { name: 'config.py',  desc: 'reads UPLOAD_DIR, MAX_UPLOAD_SIZE_MB',                dir: 'uses',      col: 'util' },
+    ],
+    code: `<span class="k">from</span> <span class="n">app.services.pdf_service</span> <span class="k">import</span> <span class="n">PDFService</span>
+
+<span class="n">svc</span> = <span class="f">PDFService</span>(<span class="n">db</span>)
+
+<span class="c"># Save uploaded file (streaming, size-checked):</span>
+<span class="n">doc</span> = <span class="k">await</span> <span class="n">svc</span>.<span class="f">save_upload</span>(<span class="n">upload_file</span>)
+
+<span class="c"># Update after background ingestion:</span>
+<span class="k">await</span> <span class="n">svc</span>.<span class="f">update_status</span>(<span class="n">doc</span>.<span class="n">id</span>, <span class="s">"indexed"</span>, <span class="p">chunk_count</span>=<span class="n">42</span>)`,
+  },
+
+  chat_service: {
+    cat: 'svc', icon: '🕐', name: 'chat_service.py', path: 'app/services/chat_service.py',
+    tags: ['chat history', 'session persistence', 'DB writes'],
+    what: 'Persists every Q&A exchange to the chat_history table and retrieves session history. Keeps all database logic out of the API route, following the service layer pattern.',
+    flow: [
+      ['<strong>save_message()</strong>', 'creates ChatHistory row with query, answer, agent_used, timestamp'],
+      ['<strong>session_id</strong>', 'groups messages into conversations (any string, e.g. "user-123-session-1")'],
+      ['<strong>get_session_history()</strong>', 'returns last N messages for a session, ordered oldest-first'],
+      ['<strong>called by chat.py</strong>', 'after every successful agent response'],
+    ],
+    connections: [
+      { name: 'chat.py',   desc: 'saves each Q&A exchange after agent answers',  dir: 'called by', col: 'api' },
+      { name: 'models.py', desc: 'creates / reads ChatHistory ORM objects',      dir: 'uses',      col: 'db' },
+      { name: 'db.py',     desc: 'AsyncSession injected in constructor',         dir: 'uses',      col: 'db' },
+    ],
+    code: `<span class="k">from</span> <span class="n">app.services.chat_service</span> <span class="k">import</span> <span class="n">ChatService</span>
+
+<span class="n">svc</span> = <span class="f">ChatService</span>(<span class="n">db</span>)
+
+<span class="k">await</span> <span class="n">svc</span>.<span class="f">save_message</span>(
+  <span class="p">session_id</span>=<span class="s">"s1"</span>, <span class="p">user_query</span>=<span class="s">"What is risk?"</span>,
+  <span class="p">response</span>=<span class="s">"Risk is..."</span>, <span class="p">agent_used</span>=<span class="s">"pdf_agent"</span>
+)
+
+<span class="n">history</span> = <span class="k">await</span> <span class="n">svc</span>.<span class="f">get_session_history</span>(<span class="s">"s1"</span>, <span class="p">limit</span>=<span class="n">20</span>)`,
+  },
+
+  logger: {
+    cat: 'util', icon: '>', name: 'logger.py', path: 'app/utils/logger.py',
+    tags: ['structlog', 'structured logging', 'key-value logs'],
+    what: 'Configures structured logging via structlog. Every module calls get_logger(__name__) to get a bound logger that emits ISO-timestamped, key-value log lines — making production debugging easy.',
+    flow: [
+      ['<strong>configure_logging()</strong>', 'called once at import time; sets up structlog processors'],
+      ['<strong>get_logger(name)</strong>', 'returns a BoundLogger for a specific module'],
+      ['<strong>structured calls</strong>', 'logger.info("msg", key=val) — adds any context as fields'],
+      ['<strong>output format</strong>', '2024-01-15T10:23:45Z [info] PDF ingested doc_id=abc chunks=42'],
+      ['<strong>LOG_LEVEL in .env</strong>', 'set to DEBUG for verbose output, INFO for production'],
+    ],
+    connections: [
+      { name: 'every module', desc: "calls get_logger(__name__) at module level", dir: 'used by', col: 'util' },
+      { name: 'config.py',   desc: 'reads LOG_LEVEL',                            dir: 'uses',    col: 'util' },
+    ],
+    code: `<span class="k">from</span> <span class="n">app.utils.logger</span> <span class="k">import</span> <span class="n">get_logger</span>
+<span class="n">logger</span> = <span class="f">get_logger</span>(<span class="n">__name__</span>)
+
+<span class="n">logger</span>.<span class="f">info</span>(<span class="s">"PDF ingested"</span>, <span class="p">doc_id</span>=<span class="s">"abc"</span>, <span class="p">chunks</span>=<span class="n">42</span>)
+<span class="n">logger</span>.<span class="f">warning</span>(<span class="s">"No results found"</span>, <span class="p">query</span>=<span class="s">"..."</span>)
+<span class="n">logger</span>.<span class="f">error</span>(<span class="s">"DB failed"</span>, <span class="p">error</span>=<span class="f">str</span>(<span class="n">exc</span>))
+
+<span class="c"># Set LOG_LEVEL=DEBUG in .env for verbose output</span>`,
+  },
+
+  tests: {
+    cat: 'util', icon: '✓', name: 'test_system.py', path: 'tests/test_system.py',
+    tags: ['pytest', 'pytest-asyncio', 'unittest.mock', '248 lines'],
+    what: 'Comprehensive test suite covering all agents, the ingestion pipeline, and all API endpoints. Uses mocks to isolate units — no real DB or ChromaDB connection needed to run the tests.',
+    flow: [
+      ['<strong>TestRouterClassifier</strong>', 'verifies keyword routing: pdf/sql/web/default'],
+      ['<strong>TestPDFAgent</strong>', 'tests no-hits fallback, LLM error graceful degradation'],
+      ['<strong>TestSQLAgent</strong>', 'tests safe/unsafe SQL detection, result formatting'],
+      ['<strong>TestWebAgent</strong>', 'tests URL extraction, domain slugging, no-URL fallback'],
+      ['<strong>TestIngestion</strong>', 'tests chunking logic and metadata fields'],
+      ['<strong>TestAPI*</strong>', 'integration tests for health, document, and chat endpoints'],
+    ],
+    connections: [
+      { name: 'all modules', desc: 'imports and tests each module in isolation', dir: 'tests', col: 'util' },
+    ],
+    code: `<span class="c"># Run all tests:</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">pytest</span> <span class="n">pytest-asyncio</span>
+<span class="n">pytest</span> <span class="n">tests/</span> <span class="p">-v</span>
+
+<span class="c"># Run a specific class:</span>
+<span class="n">pytest</span> <span class="n">tests/</span> <span class="p">-v</span> <span class="p">-k</span> <span class="s">"TestSQLAgent"</span>
+
+<span class="c"># Run with coverage:</span>
+<span class="n">pytest</span> <span class="n">tests/</span> <span class="p">--cov=app</span> <span class="p">--cov-report=term-missing</span>`,
+  },
+
+  dockerfile: {
+    cat: 'infra', icon: 'D', name: 'Dockerfile', path: 'Dockerfile',
+    tags: ['multi-stage', 'python:3.11-slim', 'non-root user', 'HEALTHCHECK'],
+    what: 'Multi-stage Docker build. Stage 1 (builder) installs all Python deps with compilers. Stage 2 (runtime) is a slim image that copies only the compiled wheels — keeping the final image small and secure.',
+    flow: [
+      ['<strong>builder stage</strong>', 'python:3.11-slim + build-essential; pip installs all deps to /install'],
+      ['<strong>runtime stage</strong>', 'python:3.11-slim + only libpq5 + curl; copies /install from builder'],
+      ['<strong>non-root user</strong>', 'adduser appuser; chown /app; USER appuser — security best practice'],
+      ['<strong>EXPOSE 8080</strong>', 'documents the port Uvicorn listens on'],
+      ['<strong>HEALTHCHECK</strong>', 'curls /health every 30s; marks container unhealthy after 3 failures'],
+      ['<strong>CMD</strong>', 'uvicorn app.main:app --host 0.0.0.0 --port 8080 --workers 2'],
+    ],
+    connections: [
+      { name: 'docker-compose.yml', desc: 'builds this image for the api service', dir: 'used by', col: 'infra' },
+      { name: 'requirements.txt',   desc: 'pip installs these in builder stage',   dir: 'uses',    col: 'util' },
+    ],
+    code: `<span class="c"># Build image manually:</span>
+<span class="n">docker</span> <span class="n">build</span> <span class="p">-t</span> <span class="n">enterprise-rag</span> <span class="p">.</span>
+
+<span class="c"># Inspect image size:</span>
+<span class="n">docker</span> <span class="n">images</span> <span class="n">enterprise-rag</span>
+
+<span class="c"># Run container directly:</span>
+<span class="n">docker</span> <span class="n">run</span> <span class="p">-p</span> <span class="n">8080:8080</span> <span class="p">--env-file</span> <span class="n">.env</span> <span class="n">enterprise-rag</span>`,
+  },
+
+  compose: {
+    cat: 'infra', icon: 'C', name: 'docker-compose.yml', path: 'docker-compose.yml',
+    tags: ['3 services', 'named volumes', 'health checks', 'depends_on'],
+    what: 'Orchestrates all three containers. PostgreSQL and ChromaDB start first with health checks; the API waits for both to be healthy before starting. Volumes persist data across restarts. One command boots the entire system.',
+    flow: [
+      ['<strong>postgres</strong>', 'postgres:16-alpine; health: pg_isready; volume: postgres_data'],
+      ['<strong>chromadb</strong>', 'chromadb/chroma:latest; health: curl heartbeat; volume: chroma_data'],
+      ['<strong>api</strong>', 'built from Dockerfile; depends_on: [postgres healthy, chromadb healthy]'],
+      ['<strong>rag_net</strong>', 'shared bridge network — services communicate by name'],
+      ['<strong>volumes</strong>', 'postgres_data, chroma_data, upload_data persist across down/up'],
+    ],
+    connections: [
+      { name: 'Dockerfile',    desc: 'api service built from this',              dir: 'uses',     col: 'infra' },
+      { name: '.env',          desc: 'env_file: .env injects all config values', dir: 'uses',     col: 'util' },
+    ],
+    code: `<span class="c"># Start everything:</span>
+<span class="n">docker</span> <span class="n">compose</span> <span class="n">up</span> <span class="p">--build</span>
+
+<span class="c"># Rebuild only the API after code changes:</span>
+<span class="n">docker</span> <span class="n">compose</span> <span class="n">up</span> <span class="p">--build</span> <span class="n">api</span>
+
+<span class="c"># Stop (keep data volumes):</span>
+<span class="n">docker</span> <span class="n">compose</span> <span class="n">down</span>
+
+<span class="c"># Stop + wipe all data:</span>
+<span class="n">docker</span> <span class="n">compose</span> <span class="n">down</span> <span class="p">-v</span>`,
+  },
+
+  requirements: {
+    cat: 'util', icon: 'R', name: 'requirements.txt', path: 'requirements.txt',
+    tags: ['pip', 'pinned versions', '8 dependency groups'],
+    what: 'All Python dependencies with pinned versions for reproducible installs. Grouped into: web framework, data validation, database, AI/LangChain, vector store, PDF processing, web scraping, and utilities.',
+    flow: [
+      ['<strong>FastAPI + Uvicorn</strong>', 'web framework and ASGI server'],
+      ['<strong>Pydantic + pydantic-settings</strong>', 'validation and config'],
+      ['<strong>SQLAlchemy + asyncpg</strong>', 'async PostgreSQL ORM'],
+      ['<strong>langchain + langgraph + HF</strong>', 'AI orchestration and embeddings'],
+      ['<strong>chromadb</strong>', 'vector store client'],
+      ['<strong>pymupdf</strong>', 'PDF text extraction'],
+      ['<strong>httpx + beautifulsoup4</strong>', 'web scraping'],
+    ],
+    connections: [
+      { name: 'Dockerfile',    desc: 'pip installs this in builder stage',      dir: 'used by', col: 'infra' },
+    ],
+    code: `<span class="c"># Install locally for development:</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="p">-r</span> <span class="n">requirements.txt</span>
+
+<span class="c"># Key versions:</span>
+<span class="n">fastapi</span>==<span class="s">0.111.0</span>
+<span class="n">langgraph</span>==<span class="s">0.1.1</span>
+<span class="n">chromadb</span>==<span class="s">0.5.0</span>
+<span class="n">pymupdf</span>==<span class="s">1.24.3</span>
+<span class="n">sentence-transformers</span>==<span class="s">2.7.0</span>`,
+  },
+
+  env: {
+    cat: 'util', icon: '.e', name: '.env', path: '.env',
+    tags: ['environment variables', 'secrets', 'runtime config'],
+    what: 'The single file you need to edit to configure the entire system. Holds all secrets (HuggingFace API key), service addresses, and RAG tuning parameters. Never commit this file to version control.',
+    flow: [
+      ['<strong>HUGGINGFACE_API_KEY</strong>', 'required — get free key at huggingface.co/settings/tokens'],
+      ['<strong>DB / ChromaDB hosts</strong>', 'default to Docker service names (postgres, chromadb)'],
+      ['<strong>RAG params</strong>', 'CHUNK_SIZE, CHUNK_OVERLAP, TOP_K_RESULTS, MAX_TOKENS, TEMPERATURE'],
+      ['<strong>UPLOAD_DIR</strong>', 'where PDFs are stored on disk (default: uploads/)'],
+      ['<strong>LOG_LEVEL</strong>', 'INFO for production, DEBUG for development'],
+    ],
+    connections: [
+      { name: 'config.py',         desc: 'pydantic-settings reads all values',    dir: 'read by', col: 'util' },
+      { name: 'docker-compose.yml',desc: 'env_file: .env injects into containers', dir: 'read by', col: 'infra' },
+    ],
+    code: `<span class="c"># Minimum required change to get started:</span>
+<span class="n">HUGGINGFACE_API_KEY</span>=<span class="s">hf_your_actual_key_here</span>
+
+<span class="c"># RAG tuning (optional):</span>
+<span class="n">CHUNK_SIZE</span>=<span class="s">512</span>        <span class="c"># tokens per chunk</span>
+<span class="n">TOP_K_RESULTS</span>=<span class="s">5</span>      <span class="c"># chunks retrieved per query</span>
+<span class="n">TEMPERATURE</span>=<span class="s">0.2</span>      <span class="c"># LLM determinism (0=strict, 1=creative)</span>`,
+  },
+};
+
+function show(el, key) {
+  document.querySelectorAll('.tree-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+
+  const m = MODULES[key];
+  if (!m) return;
+  const c = C[m.cat];
+
+  const flowHTML = m.flow.map((s, i) => `
+    <div class="flow-step">
+      <div class="step-num" style="background:${c.bg};color:${c.accent}">${i+1}</div>
+      <div class="step-text">${s[0]} — ${s[1]}</div>
+    </div>`).join('');
+
+  const connHTML = m.connections.map(cn => {
+    const cc = C[cn.col] || C.util;
+    return `<div class="conn-row">
+      <span class="conn-name" style="color:${cc.accent}">${cn.name}</span>
+      <span class="conn-desc">${cn.desc}</span>
+      <span class="conn-arrow">${cn.dir}</span>
+    </div>`;
+  }).join('');
+
+  const tagsHTML = m.tags.map(t =>
+    `<span class="mod-tag" style="color:${c.accent};border-color:${c.bg}">${t}</span>`
+  ).join('');
+
+  document.getElementById('detail').innerHTML = `
+    <div class="mod-header">
+      <div class="mod-icon-box" style="background:${c.bg};color:${c.accent}">${m.icon}</div>
+      <div class="mod-title-area">
+        <div class="mod-name">${m.name}</div>
+        <div class="mod-path">${m.path}</div>
+        <div class="mod-badges">${tagsHTML}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">What it does</div>
+      <p class="what-text">${m.what}</p>
+    </div>
+
+    <div class="section">
+      <div class="section-label">How it works — step by step</div>
+      <div class="flow-list">${flowHTML}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Connects to</div>
+      <div class="conn-grid">${connHTML}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Example usage</div>
+      <pre class="code-block">${m.code}</pre>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
