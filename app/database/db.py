@@ -16,6 +16,10 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
+print(settings.DATABASE_URL)
+
+
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,

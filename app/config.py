@@ -36,9 +36,9 @@ class Settings(BaseSettings):
     
     POSTGRES_USER: str = Field( default="raguser", min_length=1, )
     
-    POSTGRES_PASSWORD: SecretStr = Field( default=SecretStr("ragpassword"), )
+    POSTGRES_PASSWORD: SecretStr = Field( default=SecretStr("password"), )
     
-    DATABASE_URL: str = Field( default="postgresql+asyncpg://raguser:ragpassword@postgres:5432/enterprise_rag" )
+    DATABASE_URL: str = Field( default="postgresql+asyncpg://raguser:password@localhost:5432/enterprise_rag" )
     
     # ChromaDB
     CHROMA_HOST: str = Field( default="chromadb", min_length=1, )
