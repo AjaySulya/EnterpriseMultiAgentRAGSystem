@@ -71,7 +71,7 @@ services:
       # Override host/port values to use Docker service names
       POSTGRES_HOST: postgres
       CHROMA_HOST: chromadb
-      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-raguser}:${POSTGRES_PASSWORD:-ragpassword}@postgres:5432/${POSTGRES_DB:-enterprise_rag}"
+      DATABASE_URL: "postgresql+asyncpg://${POSTGRES_USER:-raguser}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-enterprise_rag}"
     volumes:
       - upload_data:/app/uploads
       - chroma_data:/app/chroma_db
